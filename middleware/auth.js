@@ -7,7 +7,7 @@ function authenticateToken(req, res, next) {
   const authHeader = req.headers['authorization'];
   let token = authHeader && authHeader.split(' ')[1];
 
-  // ✅ Fallback: token por query string (para visor <object>/<iframe>)
+  // ✅ CLAVE: aceptar token por query string (para visor <object>/<iframe>)
   if (!token && req.query && req.query.token) {
     token = req.query.token;
   }
