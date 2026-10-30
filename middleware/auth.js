@@ -9,7 +9,12 @@ const JWT_SECRET = process.env.JWT_SECRET || 'transferencia_drtc_secret';
  */
 function authenticateToken(req, res, next) {
   const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1];
+  let token = authHeader && authHeader.split(' ')[1];
+
+  // Fallback: token por query string (para visor <object> y <iframe>)
+  if (!token && req.query && req.query.token) {
+    token = req.query.token;
+  }
 
   if (!token) {
     return res.status(401).json({ error: 'Token de acceso requerido' });
