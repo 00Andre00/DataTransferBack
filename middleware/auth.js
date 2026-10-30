@@ -3,15 +3,11 @@ const jwt = require('jsonwebtoken');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'transferencia_drtc_secret';
 
-/**
- * Verifica el JWT y adjunta req.user:
- *   { id, username, nombre, rol, sede_id, area_id }
- */
 function authenticateToken(req, res, next) {
   const authHeader = req.headers['authorization'];
   let token = authHeader && authHeader.split(' ')[1];
 
-  // Fallback: token por query string (para visor <object> y <iframe>)
+  // ✅ Fallback: token por query string (para visor <object>/<iframe>)
   if (!token && req.query && req.query.token) {
     token = req.query.token;
   }
@@ -29,9 +25,6 @@ function authenticateToken(req, res, next) {
   });
 }
 
-// ==================== ROLES ====================
-
-/** Superusuario: hace TODO */
 function requireAdmin(req, res, next) {
   if (req.user?.rol !== 'admin') {
     return res.status(403).json({ error: 'Se requiere rol admin' });
@@ -39,7 +32,6 @@ function requireAdmin(req, res, next) {
   next();
 }
 
-/** admin o encargado (revisa tickets, supervisa sedes) */
 function requireAdminOrEncargado(req, res, next) {
   const rol = req.user?.rol;
   if (rol !== 'admin' && rol !== 'encargado') {
@@ -48,7 +40,6 @@ function requireAdminOrEncargado(req, res, next) {
   next();
 }
 
-/** admin o rrhh (gestión de personal) */
 function requireAdminOrRRHH(req, res, next) {
   const rol = req.user?.rol;
   if (rol !== 'admin' && rol !== 'rrhh') {
@@ -57,7 +48,6 @@ function requireAdminOrRRHH(req, res, next) {
   next();
 }
 
-/** Cualquiera autenticado */
 function requireAnyRole(req, res, next) {
   const rol = req.user?.rol;
   if (!['admin', 'encargado', 'rrhh', 'area_user'].includes(rol)) {
@@ -66,17 +56,10 @@ function requireAnyRole(req, res, next) {
   next();
 }
 
-/**
- * Verifica acceso a la sede indicada:
- *  - admin y encargado: todas las sedes
- *  - rrhh y area_user: solo su sede
- */
 function canAccessSede(targetSedeId) {
   return (req, res, next) => {
     const { rol, sede_id: userSedeId } = req.user;
-
     if (rol === 'admin' || rol === 'encargado') return next();
-
     if ((rol === 'rrhh' || rol === 'area_user') && targetSedeId && targetSedeId !== userSedeId) {
       return res.status(403).json({ error: 'Sin acceso a esta sede' });
     }
